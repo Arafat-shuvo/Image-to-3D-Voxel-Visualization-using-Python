@@ -1,48 +1,36 @@
-import tensorflow as tf
-from tensorflow.keras import layers, models
-model = models.Sequential([
-    
-    # First convolution layer
-    layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)),
-    layers.MaxPooling2D((2, 2)),
-    
-    # Second convolution layer
-    layers.Conv2D(64, (3, 3), activation='relu'),
-    layers.MaxPooling2D((2, 2)),
-    
-    # Third convolution layer (optional deeper feature extraction)
-    layers.Conv2D(64, (3, 3), activation='relu'),
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
 
-    # Flatten before dense layers
-    layers.Flatten(),
-
-    # Fully connected layers
-    layers.Dense(64, activation='relu'),
-
-    # Output layer (example: 10 classes)
-    layers.Dense(10, activation='softmax')
-])
-
-
-model.compile(
-    optimizer='adam',
-    loss='sparse_categorical_crossentropy',
-    metrics=['accuracy']
+# Image Load (Grayscale)
+img = cv2.imread(
+    r"C:\Users\Arafat\Desktop\Python Basic\images.jpg",
+    cv2.IMREAD_GRAYSCALE
 )
-
-mnist = tf.keras.datasets.mnist
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
+# ছোট করে নেওয়া (visualization সহজ করার জন্য)
+img = cv2.resize(img, (50, 50))
 
 # Normalize
-x_train = x_train / 255.0
-x_test = x_test / 255.0
+img = img / 255.0
 
-# Reshape for CNN (add channel dimension)
-x_train = x_train.reshape(-1, 28, 28, 1)
-x_test = x_test.reshape(-1, 28, 28, 1)
+# Height Map তৈরি
+height = (img * 10).astype(int)
 
-# Train
-model.fit(x_train, y_train, epochs=5, validation_data=(x_test, y_test))
+# Voxel Grid
+voxels = np.zeros((50, 50, 10), dtype=bool)
 
-test_loss, test_acc = model.evaluate(x_test, y_test)
-print("Test accuracy:", test_acc)
+for x in range(50):
+    for y in range(50):
+        h = height[x, y]
+
+        if h > 0:
+            voxels[x, y, :h] = True
+
+# 3D Plot
+fig = plt.figure(figsize=(10,8))
+ax = fig.add_subplot(111, projection='3d')
+
+ax.voxels(voxels)
+
+plt.title("Image to Voxel")
+plt.show()
